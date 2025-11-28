@@ -2,11 +2,24 @@
   <div class="min-h-screen bg-gray-50">
     <AppHeader />
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">Projects</h1>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow">
-          <h3 class="text-xl font-semibold mb-2">Project List</h3>
-          <p class="text-gray-600">Your projects will appear here</p>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Projects</h1>
+          <p class="text-gray-600">Stay on top of every initiative with a dedicated workspace.</p>
+        </div>
+        <router-link
+          to="/dashboard"
+          class="text-sm font-semibold text-primary-600 bg-primary-50 px-4 py-2 rounded-lg hover:bg-primary-100"
+        >
+          Create project
+        </router-link>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white shadow rounded-lg p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-2">All projects</h2>
+          <p class="text-sm text-gray-500 mb-4">Projects you manage or collaborate on will appear below.</p>
+          <ProjectList :projects="projects" />
         </div>
       </div>
     </main>
@@ -15,9 +28,21 @@
 
 <script>
 import AppHeader from '../components/layout/AppHeader.vue'
+import ProjectList from '../components/projects/ProjectList.vue'
+import { useProjectStore } from '../stores/projects'
 
 export default {
   name: 'Projects',
-  components: { AppHeader }
+  components: { AppHeader, ProjectList },
+  async created() {
+    const projectStore = useProjectStore()
+    await projectStore.fetchProjects()
+  },
+  computed: {
+    projects() {
+      const projectStore = useProjectStore()
+      return projectStore.projects
+    }
+  }
 }
 </script>

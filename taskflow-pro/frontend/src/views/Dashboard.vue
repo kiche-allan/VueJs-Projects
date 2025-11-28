@@ -23,6 +23,80 @@
       />
     </div>
 
+    <div class="card bg-white shadow rounded-lg p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Start a new project</h2>
+          <p class="text-sm text-gray-500">Fill out the quick form and hit submit to add it to your workspace.</p>
+        </div>
+      </div>
+      <form class="space-y-4" @submit.prevent="handleProjectSubmit">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Project name</label>
+            <input
+              v-model="newProject.name"
+              type="text"
+              placeholder="Design system refresh"
+              class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Highlight color</label>
+            <input
+              v-model="newProject.color"
+              type="color"
+              class="mt-1 block w-20 h-10 rounded-lg border border-gray-300"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Description</label>
+          <textarea
+            v-model="newProject.description"
+            rows="3"
+            placeholder="What will this project accomplish?"
+            class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          ></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Start date</label>
+            <input
+              v-model="newProject.start_date"
+              type="date"
+              class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">End date</label>
+            <input
+              v-model="newProject.end_date"
+              type="date"
+              class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-md bg-primary-600 text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-primary-500 disabled:opacity-60"
+            :disabled="submittingProject"
+          >
+            <span v-if="submittingProject">Creating...</span>
+            <span v-else>Submit project</span>
+          </button>
+        </div>
+        <p
+          v-if="formMessage"
+          class="text-sm"
+          :class="formMessageType === 'error' ? 'text-red-500' : 'text-green-600'"
+        >
+          {{ formMessage }}
+        </p>
+      </form>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Recent Projects -->
       <div class="lg:col-span-2">
@@ -66,6 +140,20 @@ export default {
     ClockIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon
+  },
+  data() {
+    return {
+      newProject: {
+        name: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        color: '#2563eb'
+      },
+      submittingProject: false,
+      formMessage: '',
+      formMessageType: 'success'
+    }
   },
   async created() {
     const projectStore = useProjectStore()
@@ -120,6 +208,47 @@ export default {
           color: 'danger'
         }
       ]
+    }
+  },
+  methods: {
+    async handleProjectSubmit() {
+      const projectStore = useProjectStore()
+      if (!this.newProject.name.trim()) {
+        this.formMessageType = 'error'
+        this.formMessage = 'Project name is required.'
+        return
+      }
+
+      this.formMessage = ''
+      this.submittingProject = true
+
+      try {
+        const created = await projectStore.createProject({
+          name: this.newProject.name.trim(),
+          description: this.newProject.description.trim(),
+          start_date: this.newProject.start_date || null,
+          end_date: this.newProject.end_date || null,
+          color: this.newProject.color
+        })
+
+        this.formMessageType = 'success'
+        this.formMessage = `${created.name} has been added to your projects.`
+        this.resetProjectForm()
+      } catch (error) {
+        this.formMessageType = 'error'
+        this.formMessage = error.response?.data?.error || 'Failed to create project.'
+      } finally {
+        this.submittingProject = false
+      }
+    },
+    resetProjectForm() {
+      this.newProject = {
+        name: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        color: '#2563eb'
+      }
     }
   }
 }

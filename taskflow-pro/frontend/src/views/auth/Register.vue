@@ -78,7 +78,10 @@ export default {
     async handleRegister() {
       const authStore = useAuthStore()
       try {
-        await authStore.register(this.name, this.email, this.password)
+        const { success, error } = await authStore.register({ name: this.name, email: this.email, password: this.password })
+        if (!success) {
+          throw new Error(error)
+        }
         this.$router.push('/')
       } catch (error) {
         alert('Registration failed: ' + error.message)

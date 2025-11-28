@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import axios from "axios";
+import { api } from "../utils/api";
 
 export const useProjectStore = defineStore("projects", {
   state: () => ({
@@ -14,7 +14,7 @@ export const useProjectStore = defineStore("projects", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.get("/api/projects");
+        const response = await api.get("/projects");
         this.projects = response.data;
       } catch (error) {
         this.error = error.message;
@@ -28,7 +28,7 @@ export const useProjectStore = defineStore("projects", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.get(`/api/projects/${id}`);
+        const response = await api.get(`/projects/${id}`);
         this.currentProject = response.data;
       } catch (error) {
         this.error = error.message;
@@ -42,7 +42,7 @@ export const useProjectStore = defineStore("projects", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.post("/api/projects", projectData);
+        const response = await api.post("/projects", projectData);
         this.projects.unshift(response.data);
         return response.data;
       } catch (error) {
@@ -58,7 +58,7 @@ export const useProjectStore = defineStore("projects", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.put(`/api/projects/${id}`, projectData);
+        const response = await api.put(`/projects/${id}`, projectData);
         const index = this.projects.findIndex((p) => p.id === id);
         if (index !== -1) {
           this.projects[index] = response.data;
@@ -77,7 +77,7 @@ export const useProjectStore = defineStore("projects", {
       this.loading = true;
       this.error = null;
       try {
-        await axios.delete(`/api/projects/${id}`);
+        await api.delete(`/projects/${id}`);
         this.projects = this.projects.filter((p) => p.id !== id);
       } catch (error) {
         this.error = error.message;

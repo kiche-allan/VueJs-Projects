@@ -66,7 +66,10 @@ export default {
     async handleLogin() {
       const authStore = useAuthStore()
       try {
-        await authStore.login(this.email, this.password)
+        const { success, error } = await authStore.login({ email: this.email, password: this.password })
+        if (!success) {
+          throw new Error(error)
+        }
         this.$router.push('/')
       } catch (error) {
         alert('Login failed: ' + error.message)

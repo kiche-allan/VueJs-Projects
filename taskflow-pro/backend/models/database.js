@@ -4,17 +4,49 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const DB_USER = process.env.DB_USER || "postgres";
+const DB_HOST = process.env.DB_HOST || "localhost";
+const DB_NAME = process.env.DB_NAME || "taskflow_pro";
+const DB_PASSWORD = process.env.DB_PASSWORD || "password";
+const DB_PORT = Number(process.env.DB_PORT || 5432);
+
 const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "taskflow_pro",
-  password: process.env.DB_PASSWORD || "password",
-  port: process.env.DB_PORT || 5432,
+  user: DB_USER,
+  host: DB_HOST,
+  database: DB_NAME,
+  password: DB_PASSWORD,
+  port: DB_PORT,
 });
+
+// Ensure target database exists (connects to 'postgres' default DB first)
+const ensureDatabaseExists = async () => {
+  const adminPool = new Pool({
+    user: DB_USER,
+    host: DB_HOST,
+    database: "postgres",
+    password: DB_PASSWORD,
+    port: DB_PORT,
+  });
+  try {
+    const check = await adminPool.query(
+      "SELECT 1 FROM pg_database WHERE datname = $1",
+      [DB_NAME]
+    );
+    if (check.rowCount === 0) {
+      await adminPool.query(`CREATE DATABASE ${DB_NAME}`);
+      console.log(`✅ Database '${DB_NAME}' created`);
+    }
+  } finally {
+    await adminPool.end();
+  }
+};
 
 // Initialize database tables
 export const initDB = async () => {
   try {
+    // Create DB if missing
+    await ensureDatabaseExists();
+
     // Users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (

@@ -23,6 +23,33 @@
       />
     </div>
 
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-6 space-y-2">
+        <p class="text-sm font-semibold text-gray-500">Rust analytics</p>
+        <p class="text-2xl font-bold text-gray-900">
+          {{ rustMetrics ? rustMetrics.total_tasks : '—' }} tasks
+        </p>
+        <p class="text-sm text-gray-500">Due soon: {{ rustMetrics ? rustMetrics.due_soon : '—' }}</p>
+        <p class="text-sm text-gray-500">Projects involved: {{ rustMetrics ? rustMetrics.projects_involved : '—' }}</p>
+        <p v-if="rustMetrics && rustMetrics.generated_at" class="text-xs text-gray-400">
+          Updated {{ formatRustTimestamp(rustMetrics.generated_at) }}
+        </p>
+        <div class="flex flex-wrap gap-2 pt-2">
+          <span
+            v-for="(entry, index) in rustStatusEntries"
+            :key="entry[0] + index"
+            class="text-xs rounded-full border border-gray-200 px-3 py-1 text-gray-600"
+          >
+            {{ entry[0].replace('_', ' ') }}: {{ entry[1] }}
+          </span>
+        </div>
+      </div>
+      <div v-if="rustMetricsError" class="lg:col-span-2 bg-red-50 rounded-lg border border-red-100 p-6 text-sm text-red-600">
+        <p>Unable to load Rust insights.</p>
+        <p class="text-xs text-red-400">{{ rustMetricsError }}</p>
+      </div>
+    </div>
+
     <div class="card bg-white shadow rounded-lg p-6 mb-8">
       <div class="flex items-center justify-between mb-4">
         <div>
@@ -152,12 +179,16 @@ export default {
       },
       submittingProject: false,
       formMessage: '',
-      formMessageType: 'success'
+      formMessageType: 'success',
+      rustMetrics: null,
+      rustMetricsError: '',
+      loadingRustMetrics: false
     }
   },
   async created() {
     const projectStore = useProjectStore()
     await projectStore.fetchProjects()
+    this.fetchRustMetrics()
   },
   computed: {
     userName() {
@@ -169,7 +200,6 @@ export default {
       return projectStore.projects.slice(0, 5)
     },
     upcomingTasks() {
-      // Mock data - replace with actual API call
       return [
         { id: 1, title: 'Design system implementation', due_date: '2024-01-15', project: 'Website Redesign', priority: 'high' },
         { id: 2, title: 'API documentation', due_date: '2024-01-16', project: 'Backend Services', priority: 'medium' },
@@ -208,6 +238,12 @@ export default {
           color: 'danger'
         }
       ]
+    },
+    rustStatusEntries() {
+      if (!this.rustMetrics || !this.rustMetrics.per_status) {
+        return []
+      }
+      return Object.entries(this.rustMetrics.per_status)
     }
   },
   methods: {
@@ -248,6 +284,32 @@ export default {
         start_date: '',
         end_date: '',
         color: '#2563eb'
+      }
+    },
+    async fetchRustMetrics() {
+      this.loadingRustMetrics = true
+      this.rustMetricsError = ''
+      try {
+        const response = await fetch('http://localhost:6000/analytics')
+        if (!response.ok) {
+          throw new Error('Rust service unreachable')
+        }
+        this.rustMetrics = await response.json()
+      } catch (error) {
+        this.rustMetricsError = error.message || 'Failed to load Rust metrics'
+        console.error('Rust metrics error:', error)
+      } finally {
+        this.loadingRustMetrics = false
+      }
+    },
+    formatRustTimestamp(timestamp) {
+      if (!timestamp) {
+        return ''
+      }
+      try {
+        return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      } catch (error) {
+        return ''
       }
     }
   }

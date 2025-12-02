@@ -8,7 +8,7 @@
           <p class="text-gray-600">Stay on top of every initiative with a dedicated workspace.</p>
         </div>
         <router-link
-          to="/dashboard"
+          :to="{ name: 'Dashboard' }"
           class="text-sm font-semibold text-primary-600 bg-primary-50 px-4 py-2 rounded-lg hover:bg-primary-100"
         >
           Create project

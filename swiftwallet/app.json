@@ -1,0 +1,20 @@
+{
+	"pages": [
+		"pages/login/index",
+		"pages/home/index",
+		"pages/sendmoney/index",
+		"pages/airtime/index",
+		"pages/bills/index",
+		"pages/history/index",
+		"pages/receipt/index"
+	],
+	"window": {
+		"navigationBarTitleText": "SwiftWallet",
+		"backgroundColor": "#F7F8FA"
+	},
+	"permissions": {
+		"location": {},
+		"request": {},
+		"payment": {}
+	}
+}
